@@ -34,6 +34,8 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
   };
 
   this.installPlugins = function(plugins) {
+grunt.log.writeln (plugins.xml)
+
     var deferred = q.defer(),
         options = {
           url: [serverUrl, 'pluginManager', 'installNecessaryPlugins'].join('/'),
@@ -44,8 +46,8 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
     request(options, function(e, r, b) {
       if(e) { return deferred.reject(e); }
       _.each(plugins.plugins, function(p) {
-        grunt.log.ok('install: ' + p.id + ' @ ' + p.version);
-      })
+        grunt.log.ok('install: ' + p.shortName + ' @ ' + p.version);
+      });
       deferred.resolve(r.statusCode === 200);
     });
 
@@ -58,7 +60,8 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
 
     request(url, function(e, r, body) {
       var result = _.filter(JSON.parse(body).plugins, function(p) { return p.enabled; });
-      var plugins = _.map(result, function(p) { return { id: p.shortName, version: p.version }; });
+//      var plugins = _.map(result, function(p) { return { id: p.shortName, version: p.version }; });
+      var plugins = _.map(result, function(p) { return { shortName: p.shortName, version: p.version }; });
 
       deferred.resolve(plugins);
     });

@@ -28,7 +28,7 @@ module.exports = function(grunt) {
 
   function transformToJenkinsXml(plugins) {
     var attributes = _.map(plugins, function(p) {
-      return ['<install plugin="', p.id, '@', p.version, '" />'].join('');
+      return ['<install plugin="', p.shortName, '@', p.version, '" />'].join('');
     }).join('\n');
     return {
       xml: ['<jenkins>', attributes, '</jenkins>'].join('\n'),
@@ -150,7 +150,7 @@ module.exports = function(grunt) {
     server.fetchEnabledPlugins().
       then(function(plugins) {
         _.each(plugins, function(p) {
-          grunt.log.writeln('plugin id: ' + p.id + ', version: ' + p.version);
+          grunt.log.writeln('plugin id: ' + p.shortName + ', version: ' + p.version);
         });
       }).
       then(function() { done(true); }, logError);
