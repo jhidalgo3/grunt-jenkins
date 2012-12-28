@@ -101,15 +101,17 @@ grunt.log.writeln (plugins.xml)
         name: config.jobName
       },
       headers: {
-        'Content-Type': 'text/xml'
+        'Content-Type': 'application/xml'
       },
       body: config.fileContents
     };
 
-    request(options, function(e, r, b) {
+    var req = request(options, function(e, r, b) {
+      grunt.log.ok("create " + options.qs.name )
       if(e) { return deferred.reject(e); }
       deferred.resolve(r.statusCode === 200);
-    });
+    })();
+
 
     return deferred.promise;
   }
@@ -119,13 +121,17 @@ grunt.log.writeln (plugins.xml)
         options = {
       url: [serverUrl, 'job', config.jobName, 'config.xml'].join('/'),
       method: 'POST',
+        headers: {
+            'Content-Type': 'application/xml'
+        },
       body: config.fileContents
     };
 
-    request(options, function(e, r, b) {
-      if(e) { return deferred.reject(e); }
-      deferred.resolve(r.statusCode === 200);
-    });
+      var req = request(options, function(e, r, b) {
+        grunt.log.ok("update " + config.jobName)
+        if(e) { return deferred.reject(e); }
+        deferred.resolve(r.statusCode === 200);
+      })();
 
     return deferred.promise;
   }
@@ -135,7 +141,6 @@ grunt.log.writeln (plugins.xml)
     var url = [serverUrl, 'job', job, 'config.xml'].join('/');
     request(url, function(e, r, b) {
       var strategy = r.statusCode === 200 ? 'update' : 'create';
-      grunt.log.ok(strategy + ': ' + job);
       deferred.resolve({strategy: strategy, jobName: job});
     });
     return deferred.promise;
@@ -147,6 +152,7 @@ grunt.log.writeln (plugins.xml)
         fileStrategy = {fileName: filename, jobName: strategyObj.jobName};
 
     function resolve (val) {
+      grunt.log.writeln (val)
       deferred.resolve(val);
     }
 
