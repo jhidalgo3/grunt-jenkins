@@ -2,12 +2,20 @@ var q = require('q'),
     _ = require('underscore'),
     request = require('request');
 
-function JenkinsServer(serverUrl, fileSystem, grunt) {
+function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
   this.fetchJobs = function() {
     var deferred = q.defer();
-    var url = [serverUrl, 'api', 'json'].join('/');
-    
-    request(url, function(e, r, body) {
+      var options = {
+          url: [serverUrl, 'api', 'json'].join('/'),
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic ' + auth
+          }
+      };
+     grunt.log.writeln (auth);
+
+    request(options, function(e, r, body) {
       if(e) { return deferred.reject(e); }
       var jobs = JSON.parse(body).jobs;
       grunt.log.writeln(['Found', jobs.length, 'jobs.'].join(' '));
@@ -36,12 +44,17 @@ function JenkinsServer(serverUrl, fileSystem, grunt) {
   this.installPlugins = function(plugins) {
 grunt.log.writeln (plugins.xml)
 
-    var deferred = q.defer(),
-        options = {
+    var deferred = q.defer();
+    var options = {
           url: [serverUrl, 'pluginManager', 'installNecessaryPlugins'].join('/'),
           method: 'POST',
-          body: plugins.xml
+          body: plugins.xml,
+          headers: {
+              'Content-Type': 'application/xml',
+              'Authorization': 'Basic ' + auth
+          }
         };
+             grunt.log.ok()  ;
 
     request(options, function(e, r, b) {
       if(e) { return deferred.reject(e); }
@@ -58,13 +71,12 @@ grunt.log.writeln (plugins.xml)
     var url = [serverUrl, 'pluginManager', 'api', 'json?depth=1'].join('/');
     var deferred = q.defer();
 
-    request(url, function(e, r, body) {
+    var req = request(url, function(e, r, body) {
       var result = _.filter(JSON.parse(body).plugins, function(p) { return p.enabled; });
-//      var plugins = _.map(result, function(p) { return { id: p.shortName, version: p.version }; });
       var plugins = _.map(result, function(p) { return { shortName: p.shortName, version: p.version }; });
 
       deferred.resolve(plugins);
-    });
+    })();
 
     return deferred.promise;
   };
@@ -107,8 +119,11 @@ grunt.log.writeln (plugins.xml)
     };
 
     var req = request(options, function(e, r, b) {
-      grunt.log.ok("create " + options.qs.name )
-      if(e) { return deferred.reject(e); }
+
+      if(e || r.statusCode !== 200) {
+          return deferred.reject(e);
+      }
+      grunt.log.ok("create " + options.qs.name + " " + r.statusCode)
       deferred.resolve(r.statusCode === 200);
     })();
 
@@ -121,15 +136,17 @@ grunt.log.writeln (plugins.xml)
         options = {
       url: [serverUrl, 'job', config.jobName, 'config.xml'].join('/'),
       method: 'POST',
-        headers: {
+      headers: {
             'Content-Type': 'application/xml'
         },
       body: config.fileContents
     };
 
       var req = request(options, function(e, r, b) {
+          if(e || r.statusCode !== 200) {
+              return deferred.reject(e);
+          }
         grunt.log.ok("update " + config.jobName)
-        if(e) { return deferred.reject(e); }
         deferred.resolve(r.statusCode === 200);
       })();
 

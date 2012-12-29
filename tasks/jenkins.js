@@ -17,10 +17,22 @@ module.exports = function(grunt) {
   var pipelineDirectory = grunt.config('jenkins.pipelineDirectory') || 'pipeline';
   var serverAddress = grunt.config('jenkins.serverAddress');
 
+  var user = grunt.config('jenkins.user');
+  var pass = grunt.config('jenkins.pass');
+
   var fileSystem = new FileSystem(pipelineDirectory, grunt);
-  var server = new JenkinsServer(serverAddress, fileSystem, grunt);
+
+    var auth = function (user,pass){
+        var e = new Buffer(user +":" + pass).toString('base64');
+        grunt.log.writeln(e);
+        return e
+    }(user,pass);
+
+  var server = new JenkinsServer(serverAddress, fileSystem, grunt, auth);
   
   var PIPELINE_DIRECTORY = fileSystem.pipelineDirectory;
+
+
 
   function logError(e) {
     grunt.log.error(e);
