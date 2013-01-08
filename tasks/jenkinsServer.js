@@ -13,7 +13,6 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
               'Authorization': 'Basic ' + auth
           }
       };
-     grunt.log.writeln (auth);
 
     request(options, function(e, r, body) {
       if(e) { return deferred.reject(e); }
@@ -42,7 +41,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
   };
 
   this.installPlugins = function(plugins) {
-grunt.log.writeln (plugins.xml)
+grunt.log.writeln (plugins.xml);
 
     var deferred = q.defer();
     var options = {
@@ -123,7 +122,7 @@ grunt.log.writeln (plugins.xml)
       if(e || r.statusCode !== 200) {
           return deferred.reject(e);
       }
-      grunt.log.ok("create " + options.qs.name + " " + r.statusCode)
+      grunt.log.ok("create " + options.qs.name + " " + r.statusCode);
       deferred.resolve(r.statusCode === 200);
     })();
 
@@ -146,7 +145,7 @@ grunt.log.writeln (plugins.xml)
           if(e || r.statusCode !== 200) {
               return deferred.reject(e);
           }
-        grunt.log.ok("update " + config.jobName)
+        grunt.log.ok("update " + config.jobName);
         deferred.resolve(r.statusCode === 200);
       })();
 
@@ -169,7 +168,7 @@ grunt.log.writeln (plugins.xml)
         fileStrategy = {fileName: filename, jobName: strategyObj.jobName};
 
     function resolve (val) {
-      grunt.log.writeln (val)
+      grunt.log.writeln (val);
       deferred.resolve(val);
     }
 

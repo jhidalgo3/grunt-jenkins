@@ -22,14 +22,14 @@ module.exports = function(grunt) {
 
   var fileSystem = new FileSystem(pipelineDirectory, grunt);
 
-    var auth = function (user,pass){
+    var auth = (function (user,pass){
         var e = new Buffer(user +":" + pass).toString('base64');
         grunt.log.writeln(e);
-        return e
-    }(user,pass);
+        return e;
+    }(user,pass));
 
   var server = new JenkinsServer(serverAddress, fileSystem, grunt, auth);
-  
+
   var PIPELINE_DIRECTORY = fileSystem.pipelineDirectory;
 
 
