@@ -460,7 +460,11 @@
       <created>1357911117525</created>
       <updated>1357911117525</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Groovy export global config&#10;">
+      <created>1357911123541</created>
+      <updated>1357911123541</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TodoView" selected-index="3">
