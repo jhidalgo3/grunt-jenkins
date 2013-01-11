@@ -35,7 +35,7 @@ module.exports = function(grunt) {
 
 
   function logError(e) {
-    grunt.log.error(e);
+    grunt.log.error(e + " ----- "  );
   }
 
   function transformToJenkinsXml(plugins) {
@@ -145,6 +145,15 @@ module.exports = function(grunt) {
       then(fileSystem.savePluginsToPipelineDirectory).
       then(function(result) { done(result); }, logError);
   });
+
+  grunt.registerTask('jenkins-backup-config', 'backup all global config files', function() {
+    var done = this.async();
+    server.fetchGlobalConfigurations()
+      .then (server.downloadFile)
+      /*.then (fileSystem.saveGlobalConfiguration)*/
+      .then (function() { done(true); }, logError);
+  });
+
 
   grunt.registerTask('jenkins-list-jobs', 'list all found Jenkins jobs', function() {
     var done = this.async();

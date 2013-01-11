@@ -1,6 +1,9 @@
 var q = require('q'),
     _ = require('underscore'),
-    request = require('request');
+    request = require('request'),
+  http = require('http'),
+  urlUtil = require ('url')
+  fs = require ('fs');
 
 function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
   this.fetchJobs = function() {
@@ -41,7 +44,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
   };
 
   this.installPlugins = function(plugins) {
-grunt.log.writeln (plugins.xml);
+  grunt.log.writeln (plugins.xml);
 
     var deferred = q.defer();
     var options = {
@@ -112,7 +115,8 @@ grunt.log.writeln (plugins.xml);
         name: config.jobName
       },
       headers: {
-        'Content-Type': 'application/xml'
+        'Content-Type': 'application/xml',
+        'Authorization': 'Basic ' + auth
       },
       body: config.fileContents
     };
@@ -184,6 +188,65 @@ grunt.log.writeln (plugins.xml);
 
     return deferred.promise;
   }
+
+  this.fetchGlobalConfigurations = function (){
+    var deferred = q.defer();
+    grunt.log.ok ("fetchGlobalConfigurations");
+
+    var options = {
+      url: [serverUrl, 'script'].join('/'),
+      method: 'POST',
+      body: "script=import+hudson.*%3B%0D%0Aimport+java.util.regex.*%3B%0D%0Aimport+hudson.model.*%3B%0D%0Aimport+java.lang.*%3B%0D%0Aimport+groovy.io.*%3B%0D%0Aimport+java.io.*%3B%0D%0Aimport+groovy.json.*%3B%09%0D%0Aimport+java.util.zip.ZipOutputStream%3B++%0D%0Aimport+java.util.zip.ZipEntry%3B%0D%0Aimport+java.nio.channels.FileChannel%3B%0D%0A%0D%0Ainstance+%3D+jenkins.model.Jenkins.instance%3B%0D%0A%0D%0Ajenkins_home+%3D+instance.rootDir%0D%0A%0D%0Adef+listConfigFiles+%3D+%7B++%0D%0A++prefix+-%3E%0D%0A++++listFile+%3D+%5B%5D%0D%0A+++new+File%28jenkins_home.absolutePath%29.eachFileMatch%28%7E%22.*xml%22+%29+%7B+f+-%3E%0D%0A++++++listFile.add+%28f.name%29%0D%0A+++%7D%0D%0A++return+%28listFile%29%0D%0A%7D%0D%0A++%0D%0AString+zipFileName+%3D+%22userContent%2Fconfig_bck.zip%22%0D%0AString+zipDir+%3D+jenkins_home%0D%0AZipOutputStream+zipFile+%3D+new+ZipOutputStream%28new+FileOutputStream%28zipDir+%2B+%22%2F%22+%2B+zipFileName%29%29%0D%0A%0D%0AlistConfigFiles+%28%29.each+%28%29++%7BconfigFile+-%3E%0D%0A++++def+file+%3D+new+File+%28zipDir+%2B+%22%2F%22+%2B+configFile%29%3B+++%0D%0A++++if+%28file.exists%28%29%29+%7B%0D%0A++++++++zipFile.putNextEntry%28new+ZipEntry%28file.getName%28%29%29%29++%0D%0A++++++++++++def+buffer+%3D+new+byte%5Bfile.size%28%29%5D++%0D%0A++++++++++++file.withInputStream+%7B+i+-%3E++%0D%0A++++++++++++++++def+l+%3D+i.read%28buffer%29++%0D%0A++++++++++++++++%2F%2F+check+wether+the+file+is+empty++%0D%0A++++++++++++++++if+%28l+%3E+0%29+%7B++%0D%0A++++++++++++++++++++zipFile.write%28buffer%2C+0%2C+l%29++%0D%0A++++++++++++++++%7D++%0D%0A++++++++%7D%0D%0A++++++++zipFile.closeEntry%28%29++++++++++++%0D%0A++++%7D%0D%0A%7D%0D%0AzipFile.close%28%29%0D%0A%0D%0Aprintln+%28%22OK%22%29",
+      headers: {
+        'Authorization': 'Basic ' + auth,
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    };
+
+    request(options, function(e, r, b) {
+      grunt.log.ok(" POST "  + r.statusCode);
+
+      if(e || r.statusCode != '200') { return deferred.reject(e); }
+
+      deferred.resolve('userContent/config_bck.zip');
+    });
+
+    return deferred.promise;
+  };
+
+  this.downloadFile = function (url){
+    grunt.log.ok ("downloadFile " + url);
+    var deferred = q.defer();
+
+    var options = {
+      url: [serverUrl, url].join('/'),
+      //port: 9080,
+      port: urlUtil.parse (serverUrl).port,
+      method: 'GET',
+      path: "/" + url,
+      headers: {
+        'Authorization': 'Basic ' + auth
+        //'Content-Type':'application/zip'
+      }
+    };
+    var file = fs.createWriteStream("config_bck.zip");
+
+    http.get(options, function(r) {
+      if(r.statusCode != '200') { return deferred.reject(r.statusCode); }
+      grunt.log.ok(" GET "  + r.statusCode);
+      r.on('data', function(data) {
+        file.write(data);
+      }).on('end', function() {
+          file.end();
+          console.log(' downloaded ');
+        });
+
+      deferred.resolve(true);
+    });
+
+    return deferred.promise;
+  };
+
 }
 
 module.exports = JenkinsServer;

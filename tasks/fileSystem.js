@@ -79,6 +79,20 @@ function FileSystem(pipelineDirectory, grunt) {
     return deferred.promise;
   };
 
+  this.saveGlobalConfiguration = function(body) {
+    var deferred = q.defer();
+    ensureDirectoriesExist([pipelineDirectory]);
+    var filename = [pipelineDirectory, 'config_bck.zip'].join('/');
+    fs.writeFile(filename, body, 'utf8', function(e) {
+      if(e) { return deferred.reject(e); }
+
+      grunt.log.ok('created file: ' + filename);
+      deferred.resolve(true);
+    });
+
+    return deferred.promise;
+  };
+
   function withDot(filename) {
     return (/\./).test(filename);
   }

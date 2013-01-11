@@ -12,20 +12,28 @@ import java.nio.channels.FileChannel;
 instance = jenkins.model.Jenkins.instance;
 
 jenkins_home = instance.rootDir
+
+def listConfigFiles = {  
+  prefix ->
+    listFile = []
+   new File(jenkins_home.absolutePath).eachFileMatch(~".*xml" ) { f ->
+      listFile.add (f.name)
+   }
+  return (listFile)
+}
   
-String zipFileName = "userContent/config_bck.zip"  
+String zipFileName = "userContent/config_bck.zip"
 String zipDir = jenkins_home
 ZipOutputStream zipFile = new ZipOutputStream(new FileOutputStream(zipDir + "/" + zipFileName))
 
-["config.xml"].each ()  {configFile ->
+listConfigFiles ().each ()  {configFile ->
     def file = new File (zipDir + "/" + configFile);   
     if (file.exists()) {
         zipFile.putNextEntry(new ZipEntry(file.getName()))  
             def buffer = new byte[file.size()]  
             file.withInputStream { i ->  
-                def l = i.read(buffer)  
-                // check wether the file is empty  
-                if (l > 0) {  
+                def l = i.read(buffer)
+                if (l > 0) {
                     zipFile.write(buffer, 0, l)  
                 }  
         }
@@ -34,4 +42,4 @@ ZipOutputStream zipFile = new ZipOutputStream(new FileOutputStream(zipDir + "/" 
 }
 zipFile.close()
 
-println ("OK");
+println ("OK")
