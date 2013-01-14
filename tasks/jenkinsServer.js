@@ -2,8 +2,10 @@ var q = require('q'),
     _ = require('underscore'),
     request = require('request'),
   http = require('http'),
-  urlUtil = require ('url')
-  fs = require ('fs');
+  urlUtil = require ('url'),
+  fs = require ('fs'),
+  sys = require ('sys'),
+  https = require("https");
 
 function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
   this.fetchJobs = function() {
@@ -221,34 +223,61 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
     var options = {
       hostname: urlUtil.parse (serverUrl).hostname,
       url: [serverUrl, url].join('/'),
-      //port: 9080,
       port: urlUtil.parse (serverUrl).port,
       method: 'GET',
       path: urlUtil.parse (serverUrl).pathname + url,
       headers: {
         'Authorization': 'Basic ' + auth
-        //'Content-Type':'application/zip'
       }
     };
-
+    var complete = false;
+    var content_length = 0;
+    var downloaded_bytes = 0;
+    var write_to_file = false;
+    var write_file_ready = false;
+    var local_file = "config_bck.zip";
     console.log (options)
-    var file = fs.createWriteStream("config_bck.zip");
 
-    http.get(options, function(r) {
-      if(r.statusCode != '200') { return deferred.reject(r.statusCode); }
-      grunt.log.ok(" GET "  + r.statusCode );
-
-      r.on('data', function(data) {
-        file.write(data);
+   var request = http.get(options, function(response ) {
+      switch(response.statusCode) {
+        case 200:
+          //this is good
+          //what is the content length?
+          content_length = response.headers['content-length'];
+          break;
+        case 302:
+          new_remote = response.headers.location;
+          self.download(new_remote, local_file, num+1 );
+          return;
+          break;
+        case 404:
+          return deferred.reject("File Not Found");
+        default:
+          //what the hell is default in this situation? 404?
+          request.abort();
+          return;
+      }
+      response.on('data', function(chunk) {
+        //are we supposed to be writing to file?
+        if(!write_file_ready) {
+          //set up the write file
+          write_file = fs.createWriteStream(local_file);
+          write_file_ready = true;
+        }
+        write_file.write(chunk);
+        downloaded_bytes+=chunk.length;
+        percent = parseInt( (downloaded_bytes/content_length)*100 );
+        console.log( percent );
       });
-
-      r.on('end', function() {
-          file.end();
-          console.log(' downloaded ');
-        });
-
-      deferred.resolve(true);
+      response.on('end', function() {
+        complete = true;
+        write_file.end();
+      });
     });
+    request.on('error', function(e) {
+      console.log("Got error: " + e.message);
+    });
+
 
     return deferred.promise;
   };
