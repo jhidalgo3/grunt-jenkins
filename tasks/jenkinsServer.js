@@ -23,7 +23,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
       grunt.log.writeln(['Found', jobs.length, 'jobs.'].join(' '));
       deferred.resolve(_.map(jobs, function(j) { return { name: j.name, url: j.url }; }));
     });
-    
+
     return deferred.promise;
   };
 
@@ -219,24 +219,30 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
     var deferred = q.defer();
 
     var options = {
+      hostname: urlUtil.parse (serverUrl).hostname,
       url: [serverUrl, url].join('/'),
       //port: 9080,
       port: urlUtil.parse (serverUrl).port,
       method: 'GET',
-      path: "/" + url,
+      path: urlUtil.parse (serverUrl).pathname + url,
       headers: {
         'Authorization': 'Basic ' + auth
         //'Content-Type':'application/zip'
       }
     };
+
+    console.log (options)
     var file = fs.createWriteStream("config_bck.zip");
 
     http.get(options, function(r) {
       if(r.statusCode != '200') { return deferred.reject(r.statusCode); }
-      grunt.log.ok(" GET "  + r.statusCode);
+      grunt.log.ok(" GET "  + r.statusCode );
+
       r.on('data', function(data) {
         file.write(data);
-      }).on('end', function() {
+      });
+
+      r.on('end', function() {
           file.end();
           console.log(' downloaded ');
         });
