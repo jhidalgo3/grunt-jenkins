@@ -72,15 +72,24 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
   };
 
   this.fetchEnabledPlugins = function() {
-    var url = [serverUrl, 'pluginManager', 'api', 'json?depth=1'].join('/');
+    //var url = ;
     var deferred = q.defer();
+    var url = [serverUrl, 'pluginManager', 'api', 'json?depth=1'].join('/');
+    var options = {
+      url: url ,
+      method: 'GET',
+      headers: {
+        'Authorization': 'Basic ' + auth
+      }
+    };
+    console.log (url)
 
-    var req = request(url, function(e, r, body) {
+    request(options, function(e, r, body) {
       var result = _.filter(JSON.parse(body).plugins, function(p) { return p.enabled; });
       var plugins = _.map(result, function(p) { return { shortName: p.shortName, version: p.version }; });
 
       deferred.resolve(plugins);
-    })();
+    });
 
     return deferred.promise;
   };
@@ -142,7 +151,8 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
       url: [serverUrl, 'job', config.jobName, 'config.xml'].join('/'),
       method: 'POST',
       headers: {
-            'Content-Type': 'application/xml'
+            'Content-Type': 'application/xml',
+            'Authorization': 'Basic ' + auth
         },
       body: config.fileContents
     };
@@ -210,7 +220,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
 
       if(e || r.statusCode != '200') { return deferred.reject(e); }
 
-      deferred.resolve('userContent/config_bck.zip');
+      deferred.resolve('/userContent/config_bck.zip');
     });
 
     return deferred.promise;
