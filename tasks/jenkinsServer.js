@@ -98,7 +98,16 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
     var deferred = q.defer();
     var promises = _.map(jobs, function(j) {
       var d = q.defer();
-      request([j.url, 'config.xml'].join(''), function(e, r, body) {
+      var options = {
+      url: [j.url, 'config.xml'].join(''),
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/xml',
+        'Authorization': 'Basic ' + auth
+      }
+    };
+    console.log (options['url'])
+      request(options, function(e, r, body) {
         if(e) { return d.reject(e); }
         j.config = body;
         d.resolve(j);
