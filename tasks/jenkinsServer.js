@@ -179,8 +179,19 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
 
   function fetchJobConfigurationStrategy(job) {
     var deferred = q.defer();
-    var url = [serverUrl, 'job', job, 'config.xml'].join('/');
-    request(url, function(e, r, b) {
+    var urlConfig = [serverUrl, 'job', job, 'config.xml'].join('/');
+    
+    var options = {
+      url: urlConfig,
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/xml',
+        'Authorization': 'Basic ' + auth
+      }
+    };
+	
+    var req = request(options, function(e, r, b) {
+       grunt.log.ok("STATUS " + r.statusCode);
       var strategy = r.statusCode === 200 ? 'update' : 'create';
       deferred.resolve({strategy: strategy, jobName: job});
     });
