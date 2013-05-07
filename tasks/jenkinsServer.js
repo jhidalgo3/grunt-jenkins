@@ -82,7 +82,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
         'Authorization': 'Basic ' + auth
       }
     };
-    console.log (url)
+    console.log (url);
 
     request(options, function(e, r, body) {
       var result = _.filter(JSON.parse(body).plugins, function(p) { return p.enabled; });
@@ -106,7 +106,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
         'Authorization': 'Basic ' + auth
       }
     };
-    console.log (options['url'])
+    console.log (options['url']);
       request(options, function(e, r, body) {
         if(e) { return d.reject(e); }
         j.config = body;
@@ -180,7 +180,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
   function fetchJobConfigurationStrategy(job) {
     var deferred = q.defer();
     var urlConfig = [serverUrl, 'job', job, 'config.xml'].join('/');
-    
+
     var options = {
       url: urlConfig,
       method: 'GET',
@@ -189,7 +189,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
         'Authorization': 'Basic ' + auth
       }
     };
-	
+
     var req = request(options, function(e, r, b) {
        grunt.log.ok("STATUS " + r.statusCode);
       var strategy = r.statusCode === 200 ? 'update' : 'create';
@@ -266,7 +266,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
     var write_to_file = false;
     var write_file_ready = false;
     var local_file = "config_bck.zip";
-    console.log (options)
+    console.log (options);
 
    var request = http.get(options, function(response ) {
       switch(response.statusCode) {
@@ -276,7 +276,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
           content_length = response.headers['content-length'];
           break;
         case 302:
-          new_remote = response.headers.location;
+          var new_remote = response.headers.location;
           self.download(new_remote, local_file, num+1 );
           return;
           break;
@@ -296,7 +296,7 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
         }
         write_file.write(chunk);
         downloaded_bytes+=chunk.length;
-        percent = parseInt( (downloaded_bytes/content_length)*100 );
+        var percent = parseInt( (downloaded_bytes/content_length)*100 );
         console.log( percent );
       });
       response.on('end', function() {
@@ -307,7 +307,6 @@ function JenkinsServer(serverUrl, fileSystem, grunt, auth) {
     request.on('error', function(e) {
       console.log("Got error: " + e.message);
     });
-
 
     return deferred.promise;
   };

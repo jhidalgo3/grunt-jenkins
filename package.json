@@ -1,7 +1,7 @@
 {
   "name": "grunt-jenkins",
   "description": "Manage Jenkins with Grunt",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "homepage": "https://github.com/sghill/grunt-jenkins",
   "author": {
     "name": "sghill",
@@ -29,7 +29,8 @@
     "test": "grunt test"
   },
   "devDependencies": {
-    "grunt": "~0.3.17"
+    "grunt": "~0.4.1",
+    "grunt-contrib-jshint": "~0.4.3"
   },
   "dependencies": {
     "request": "2.11.4",
@@ -42,4 +43,3 @@
     "ci"
   ]
 }
-

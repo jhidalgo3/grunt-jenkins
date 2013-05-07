@@ -20,7 +20,7 @@ function FileSystem(pipelineDirectory, grunt) {
     fs.readdir(pipelineDirectory, function(e, contents) {
       if(e) { return deferred.reject(e); }
       // assumption: we don't have periods in our job names
-      grunt.log.writeln (contents)
+      grunt.log.writeln (contents);
       var directories = _.reject(contents, withDot);
       deferred.resolve(directories);
     });
